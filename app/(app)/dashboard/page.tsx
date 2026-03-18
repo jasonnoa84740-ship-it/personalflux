@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
   Bot,
   Crown,
-  Eye,
   MessageSquare,
   Plus,
   Settings2,
@@ -14,8 +15,6 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { getUserSubscription } from "@/lib/subscriptions";
-
-const DEV_USER_ID = "cmmv2v0050001o0gyx4orav0e";
 
 function formatDate(date: Date | null | undefined) {
   if (!date) return "—";
@@ -28,13 +27,10 @@ function formatDate(date: Date | null | undefined) {
 }
 
 function formatPlan(plan: string | null | undefined) {
-  if (!plan) return "FREE";
-  return plan;
+  return plan || "FREE";
 }
 
 function formatStatus(status: string | null | undefined) {
-  if (!status) return "INACTIVE";
-
   switch (status) {
     case "ACTIVE":
       return "Actif";
@@ -44,7 +40,6 @@ function formatStatus(status: string | null | undefined) {
       return "Paiement en retard";
     case "CANCELED":
       return "Annulé";
-    case "INACTIVE":
     default:
       return "Inactif";
   }
@@ -66,18 +61,56 @@ function getStatusBadgeClass(status: string | null | undefined) {
 }
 
 export default async function DashboardPage() {
+  const { userId: clerkUserId } = await auth();
+
+  if (!clerkUserId) {
+    redirect("/login");
+  }
+
+  const clerkUser = await currentUser();
+
+  if (!clerkUser) {
+    redirect("/login");
+  }
+
+  const primaryEmail =
+    clerkUser.emailAddresses.find(
+      (email) => email.id === clerkUser.primaryEmailAddressId
+    )?.emailAddress || null;
+
+  const username =
+    clerkUser.username ||
+    [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+    "Utilisateur";
+
+  const appUser = await db.user.upsert({
+    where: { clerkUserId },
+    update: {
+      email: primaryEmail,
+      username,
+      imageUrl: clerkUser.imageUrl,
+    },
+    create: {
+      clerkUserId,
+      email: primaryEmail,
+      username,
+      imageUrl: clerkUser.imageUrl,
+    },
+  });
+
   const clones = await db.clone.findMany({
-    where: { userId: DEV_USER_ID },
+    where: { userId: appUser.id },
     orderBy: { createdAt: "desc" },
   });
 
-  const subscription = await getUserSubscription(DEV_USER_ID);
+  const subscription = await getUserSubscription(appUser.id);
 
   const currentPlan = formatPlan(subscription?.plan);
   const currentStatus = formatStatus(subscription?.status);
   const cloneCount = clones.length;
+
   const isPremium =
-    subscription &&
+    !!subscription &&
     ["ACTIVE", "TRIALING"].includes(subscription.status) &&
     ["STARTER", "PRO", "SCALE"].includes(subscription.plan);
 
@@ -105,6 +138,7 @@ export default async function DashboardPage() {
             >
               Retour au site
             </Link>
+
             <Link
               href="/create"
               className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:scale-[1.02]"
@@ -124,9 +158,11 @@ export default async function DashboardPage() {
                 <Sparkles className="h-4 w-4" />
                 Vue d’ensemble
               </div>
+
               <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
                 Ton espace de pilotage premium
               </h1>
+
               <p className="mt-4 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
                 Retrouve tes clones, ton plan actif, ton statut premium et les
                 prochaines étapes pour faire grandir ton produit.
@@ -140,6 +176,7 @@ export default async function DashboardPage() {
               >
                 Gérer l’abonnement
               </Link>
+
               <Link
                 href="/examples"
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
@@ -181,7 +218,9 @@ export default async function DashboardPage() {
                 <MessageSquare className="h-5 w-5" />
               </div>
               <div className="mt-5 text-3xl font-semibold">0</div>
-              <div className="mt-2 text-sm text-white/50">Conversations ce mois</div>
+              <div className="mt-2 text-sm text-white/50">
+                Conversations ce mois
+              </div>
             </div>
           </div>
         </div>
@@ -197,6 +236,7 @@ export default async function DashboardPage() {
                   Produits actifs et brouillons
                 </h2>
               </div>
+
               <Link
                 href="/create"
                 className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
@@ -225,9 +265,11 @@ export default async function DashboardPage() {
                             {clone.status}
                           </span>
                         </div>
+
                         <div className="mt-2 text-sm text-white/45">
                           {clone.category || "Sans catégorie"}
                         </div>
+
                         {clone.shortDescription && (
                           <div className="mt-2 text-sm text-white/55">
                             {clone.shortDescription}
@@ -278,7 +320,9 @@ export default async function DashboardPage() {
                 </div>
                 <div>
                   <div className="font-semibold">Abonnement</div>
-                  <div className="text-sm text-white/45">État réel depuis la base</div>
+                  <div className="text-sm text-white/45">
+                    État réel depuis la base
+                  </div>
                 </div>
               </div>
 
@@ -363,10 +407,10 @@ export default async function DashboardPage() {
                 </Link>
 
                 <Link
-                  href="/examples"
+                  href="/settings"
                   className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-sm text-white/75 transition hover:bg-white/5 hover:text-white"
                 >
-                  Ouvrir les exemples
+                  Paramètres du compte
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -386,8 +430,9 @@ export default async function DashboardPage() {
                 Ton dashboard lit maintenant le vrai premium
               </h3>
               <p className="mt-4 max-w-2xl text-base leading-8 text-black/65 sm:text-lg">
-                La suite logique, c’est de protéger les pages premium et d’arrêter
-                d’utiliser le user de dev pour passer à une vraie authentification.
+                La suite logique, c’est de protéger les pages premium et
+                d’arrêter d’utiliser des données de test pour passer à une vraie
+                logique de production.
               </p>
             </div>
 
@@ -399,6 +444,7 @@ export default async function DashboardPage() {
                 Voir mon abonnement
                 <Crown className="h-4 w-4" />
               </Link>
+
               <Link
                 href="/create"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-6 py-3.5 text-sm font-medium text-black"
