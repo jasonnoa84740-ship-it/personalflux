@@ -95,3 +95,21 @@ enum SubscriptionStatus {
   CANCELED
   TRIALING
 }
+
+enum CloneVisibility {
+  PRIVATE
+  PUBLIC
+  MEMBERS_ONLY
+}
+
+enum CloneStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}

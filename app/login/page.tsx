@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ArrowLeft, Lock, Mail, Sparkles } from "lucide-react";
+import { SignIn } from "@clerk/nextjs";
+import { ArrowLeft, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-10 flex items-center justify-between">
+        <div className="mb-10">
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
@@ -30,46 +31,45 @@ export default function LoginPage() {
               Accède à ton dashboard, gère tes clones IA, tes conversations et ton abonnement.
             </p>
 
-            <form className="mt-10 space-y-6">
-              <div>
-                <label className="mb-3 block text-sm font-medium text-white/80">
-                  Adresse e-mail
-                </label>
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black px-4 py-4">
-                  <Mail className="h-5 w-5 text-white/35" />
-                  <input
-                    type="email"
-                    placeholder="ton@email.com"
-                    className="w-full bg-transparent text-white outline-none placeholder:text-white/30"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-3 block text-sm font-medium text-white/80">
-                  Mot de passe
-                </label>
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black px-4 py-4">
-                  <Lock className="h-5 w-5 text-white/35" />
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="w-full bg-transparent text-white outline-none placeholder:text-white/30"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="inline-flex w-full items-center justify-center rounded-full bg-white px-6 py-3.5 text-sm font-medium text-black transition hover:scale-[1.01]"
-              >
-                Se connecter
-              </button>
-
-              <div className="text-center text-sm text-white/45">
-                Auth réelle à brancher ensuite avec Clerk ou Auth.js.
-              </div>
-            </form>
+            <div className="mt-10 flex justify-center lg:justify-start">
+              <SignIn
+                path="/login"
+                routing="path"
+                signUpUrl="/signup"
+                forceRedirectUrl="/dashboard"
+                appearance={{
+                  variables: {
+                    colorBackground: "#0a0a0a",
+                    colorPrimary: "#ffffff",
+                    colorText: "#ffffff",
+                    colorInputBackground: "#111111",
+                    colorInputText: "#ffffff",
+                  },
+                  elements: {
+                    card: "bg-[#0a0a0a] border border-white/10 shadow-none rounded-3xl",
+                    headerTitle: "text-white",
+                    headerSubtitle: "text-white/60",
+                    socialButtonsBlockButton:
+                      "border border-white/10 bg-[#111111] text-white hover:bg-[#1a1a1a] rounded-xl shadow-none",
+                    socialButtonsBlockButtonText: "text-white",
+                    formButtonPrimary:
+                      "bg-white text-black hover:bg-white/90 rounded-xl shadow-none",
+                    formFieldInput:
+                      "bg-[#111111] text-white border border-white/10 focus:border-white rounded-xl",
+                    formFieldLabel: "text-white/80",
+                    footerActionLink: "text-white underline",
+                    formFieldAction: "text-white/70 hover:text-white",
+                    dividerLine: "bg-white/10",
+                    dividerText: "text-white/40",
+                    identityPreviewText: "text-white",
+                    identityPreviewEditButton: "text-white",
+                    formResendCodeLink: "text-white underline",
+                    otpCodeFieldInput:
+                      "bg-[#111111] text-white border border-white/10 rounded-xl",
+                  },
+                }}
+              />
+            </div>
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 sm:p-10">
@@ -92,12 +92,21 @@ export default function LoginPage() {
               ))}
             </div>
 
-            <Link
-              href="/billing"
-              className="mt-8 inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white/80 transition hover:bg-white/10"
-            >
-              Voir les offres premium
-            </Link>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-medium text-black transition hover:scale-[1.01]"
+              >
+                Créer un compte
+              </Link>
+
+              <Link
+                href="/billing"
+                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white/80 transition hover:bg-white/10"
+              >
+                Voir les offres premium
+              </Link>
+            </div>
           </div>
         </div>
       </div>
