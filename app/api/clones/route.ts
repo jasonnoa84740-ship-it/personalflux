@@ -1,64 +1,144 @@
 import { NextResponse } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { slugify } from "@/lib/slug";
 
-export async function GET() {
-  try {
-    const clones = await db.clone.findMany({
-      orderBy: { createdAt: "desc" },
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50);
+}
+
+async function generateUniqueSlug(base: string) {
+  let slug = slugify(base);
+  if (!slug) slug = `clone-${Date.now()}`;
+
+  let finalSlug = slug;
+  let count = 1;
+
+  while (true) {
+    const existing = await db.clone.findUnique({
+      where: { slug: finalSlug },
+      select: { id: true },
     });
 
-    return NextResponse.json({ clones });
-  } catch (error) {
-    console.error("GET /api/clones error:", error);
+    if (!existing) return finalSlug;
 
-    return NextResponse.json(
-      {
-        error: "Impossible de récupérer les clones.",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
-    );
+    count += 1;
+    finalSlug = `${slug}-${count}`;
   }
 }
 
 export async function POST(req: Request) {
   try {
+    const { userId: clerkUserId } = await auth();
+
+    if (!clerkUserId) {
+      return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+    }
+
+    const clerkUser = await currentUser();
+
+    if (!clerkUser) {
+      return NextResponse.json(
+        { error: "Utilisateur Clerk introuvable." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
 
-    const { userId, name } = body;
+    const {
+      name,
+      category,
+      shortDescription,
+      description,
+      avatarUrl,
+      responseStyle,
+      primaryGoal,
+      tone,
+      traits,
+      visibility,
+      status,
+    } = body;
 
-    if (!userId || !name) {
+    if (!name || typeof name !== "string" || !name.trim()) {
       return NextResponse.json(
-        { error: "userId et name sont obligatoires." },
+        { error: "Le nom du clone est obligatoire." },
         { status: 400 }
       );
     }
 
-    const baseSlug = slugify(name);
-    let finalSlug = baseSlug || `clone-${Date.now()}`;
+    const normalizedStatus =
+      status === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
 
-    const existing = await db.clone.findUnique({
-      where: { slug: finalSlug },
+    const normalizedVisibility =
+      visibility === "PUBLIC" ||
+      visibility === "MEMBERS_ONLY" ||
+      visibility === "PRIVATE"
+        ? visibility
+        : "PRIVATE";
+
+    let user = await db.user.findUnique({
+      where: { clerkUserId },
+      select: { id: true },
     });
 
-    if (existing) {
-      finalSlug = `${finalSlug}-${Date.now()}`;
+    if (!user) {
+      user = await db.user.create({
+        data: {
+          clerkUserId,
+          email:
+            clerkUser.emailAddresses.find(
+              (email) => email.id === clerkUser.primaryEmailAddressId
+            )?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress || null,
+          username: clerkUser.username || null,
+          imageUrl: clerkUser.imageUrl || null,
+        },
+        select: { id: true },
+      });
     }
+
+    const slug = await generateUniqueSlug(name);
 
     const clone = await db.clone.create({
       data: {
-        userId,
-        name,
-        slug: finalSlug,
-        category: body.category ?? null,
-        shortDescription: body.shortDescription ?? null,
-        description: body.description ?? null,
-        avatarUrl: body.avatarUrl ?? null,
-        tone: body.tone ?? null,
-        responseStyle: body.responseStyle ?? null,
-        primaryGoal: body.primaryGoal ?? null,
-        traits: Array.isArray(body.traits) ? body.traits : [],
+        userId: user.id,
+        name: name.trim(),
+        slug,
+        category: typeof category === "string" ? category : null,
+        shortDescription:
+          typeof shortDescription === "string" && shortDescription.trim()
+            ? shortDescription.trim()
+            : null,
+        description:
+          typeof description === "string" && description.trim()
+            ? description.trim()
+            : null,
+        avatarUrl:
+          typeof avatarUrl === "string" && avatarUrl.trim()
+            ? avatarUrl.trim()
+            : null,
+        responseStyle:
+          typeof responseStyle === "string" ? responseStyle : null,
+        primaryGoal:
+          typeof primaryGoal === "string" ? primaryGoal : null,
+        tone: typeof tone === "string" && tone.trim() ? tone.trim() : null,
+        traits: Array.isArray(traits)
+          ? traits.filter((item): item is string => typeof item === "string")
+          : [],
+        visibility: normalizedVisibility,
+        status: normalizedStatus,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        status: true,
       },
     });
 

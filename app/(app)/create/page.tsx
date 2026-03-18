@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@clerk/nextjs";
 import {
   ArrowLeft,
   Check,
@@ -36,10 +37,9 @@ const traitsList = [
   "Premium",
 ];
 
-const DEV_USER_ID = "cmmv2v0050001o0gyx4orav0e";
-
 export default function CreatePage() {
   const router = useRouter();
+  const { userId } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [name, setName] = useState("");
@@ -49,7 +49,7 @@ export default function CreatePage() {
   const [responseStyle, setResponseStyle] = useState("Élégant et premium");
   const [primaryGoal, setPrimaryGoal] = useState("Monétiser des conversations");
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<"draft" | "publish" | null>(null);
   const [error, setError] = useState("");
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -89,9 +89,13 @@ export default function CreatePage() {
     setImagePreview(objectUrl);
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function saveClone(status: "DRAFT" | "PUBLISHED") {
     setError("");
+
+    if (!userId) {
+      setError("Tu dois être connecté pour créer un clone.");
+      return;
+    }
 
     if (!name.trim()) {
       setError("Le nom du clone est obligatoire.");
@@ -99,41 +103,46 @@ export default function CreatePage() {
     }
 
     try {
-      setLoading(true);
+      setLoadingAction(status === "DRAFT" ? "draft" : "publish");
 
-      // Pour l’instant, on envoie juste la preview locale si elle existe.
-      // Plus tard on remplacera ça par une vraie URL Cloudinary / S3 / UploadThing.
       const res = await fetch("/api/clones", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: DEV_USER_ID,
-          name,
+          name: name.trim(),
           category,
-          shortDescription,
-          description,
-          avatarUrl: imagePreview || null,
+          shortDescription: shortDescription.trim() || null,
+          description: description.trim() || null,
+          avatarUrl: null, // pas de vrai stockage image pour l’instant
           responseStyle,
           primaryGoal,
-          tone: selectedTraits.join(", "),
+          tone: selectedTraits.join(", ") || null,
           traits: selectedTraits,
+          visibility: "PRIVATE",
+          status,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || "Impossible de créer le clone.");
+        throw new Error(data?.error || "Impossible d’enregistrer le clone.");
       }
 
       router.push("/dashboard");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue.");
     } finally {
-      setLoading(false);
+      setLoadingAction(null);
     }
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await saveClone("PUBLISHED");
   }
 
   return (
@@ -304,6 +313,11 @@ export default function CreatePage() {
                         Fichier sélectionné : {imageFile.name}
                       </div>
                     )}
+
+                    <div className="mt-3 text-xs text-white/40">
+                      L’image est previewée localement pour l’instant. Le vrai stockage
+                      viendra juste après.
+                    </div>
                   </div>
 
                   <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-black/40 p-5">
@@ -420,16 +434,21 @@ export default function CreatePage() {
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <button
                       type="button"
-                      className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+                      onClick={() => saveClone("DRAFT")}
+                      disabled={loadingAction !== null}
+                      className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Sauvegarder en brouillon
+                      {loadingAction === "draft"
+                        ? "Sauvegarde..."
+                        : "Sauvegarder en brouillon"}
                     </button>
+
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={loadingAction !== null}
                       className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {loading ? "Création..." : "Créer le clone"}
+                      {loadingAction === "publish" ? "Création..." : "Créer le clone"}
                       <ChevronRight className="h-4 w-4" />
                     </button>
                   </div>
