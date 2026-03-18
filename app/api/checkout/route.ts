@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { auth } from "@clerk/nextjs/server";
 
 const secretKey = process.env.STRIPE_SECRET_KEY;
 
@@ -12,32 +13,40 @@ const stripe = new Stripe(secretKey, {
 });
 
 const PRICE_IDS = {
-  starter: process.env.STRIPE_PRICE_STARTER || "price_1TC6MWFNYq8jcM20szkLhAZI",
-  pro: process.env.STRIPE_PRICE_PRO || "price_1TC5oGFNYq8jcM20Z98dFmlC",
-  scale: process.env.STRIPE_PRICE_SCALE || "price_1TC5rQFNYq8jcM20PUjWp3ug",
+  starter:
+    process.env.STRIPE_PRICE_STARTER ||
+    "price_1TC6MWFNYq8jcM20szkLhAZI",
+  pro:
+    process.env.STRIPE_PRICE_PRO ||
+    "price_1TC5oGFNYq8jcM20Z98dFmlC",
+  scale:
+    process.env.STRIPE_PRICE_SCALE ||
+    "price_1TC5rQFNYq8jcM20PUjWp3ug",
 };
-
-const DEV_USER_ID = "cmmv2v0050001o0gyx4orav0e";
 
 export async function POST(req: Request) {
   try {
+    const { userId } = await auth();
+
+    // 🔒 sécurité : user obligatoire
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Non autorisé" },
+        { status: 401 }
+      );
+    }
+
     const { plan } = await req.json();
 
-    const priceId =
-      plan === "starter"
-        ? PRICE_IDS.starter
-        : plan === "pro"
-        ? PRICE_IDS.pro
-        : plan === "scale"
-        ? PRICE_IDS.scale
-        : "";
-
-    if (!priceId) {
+    // 🔒 sécurisation du plan
+    if (!["starter", "pro", "scale"].includes(plan)) {
       return NextResponse.json(
-        { error: "Price Stripe introuvable pour ce plan." },
+        { error: "Plan invalide" },
         { status: 400 }
       );
     }
+
+    const priceId = PRICE_IDS[plan as keyof typeof PRICE_IDS];
 
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -51,10 +60,15 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
+
+      // 🔥 IMPORTANT
+      client_reference_id: userId,
+
       metadata: {
-        userId: DEV_USER_ID,
+        userId,
         plan,
       },
+
       success_url: `${baseUrl}/dashboard?success=true`,
       cancel_url: `${baseUrl}/billing`,
     });
@@ -66,7 +80,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: "Erreur checkout Stripe.",
-        details: error instanceof Error ? error.message : String(error),
+        details:
+          error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );

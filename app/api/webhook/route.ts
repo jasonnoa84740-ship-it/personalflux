@@ -70,14 +70,17 @@ export async function POST(req: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        const userId = session.metadata?.userId;
+        const userId = session.metadata?.userId || session.client_reference_id;
         const planFromMetadata = session.metadata?.plan;
         const stripeCustomerId =
           typeof session.customer === "string" ? session.customer : null;
         const stripeSubId =
           typeof session.subscription === "string" ? session.subscription : null;
 
-        if (!userId) break;
+        if (!userId) {
+          console.warn("checkout.session.completed sans userId");
+          break;
+        }
 
         let currentPeriodEnd: Date | null = null;
         let stripePriceId: string | null = null;
@@ -136,6 +139,7 @@ export async function POST(req: Request) {
         break;
       }
 
+      case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;

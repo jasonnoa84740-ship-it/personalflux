@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowRight,
@@ -16,7 +18,7 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 
 const stats = [
   { label: "Clones IA créés", value: "12k+" },
@@ -198,6 +200,8 @@ function SectionTitle({
 }
 
 export default function HomePage() {
+  const { isSignedIn } = useUser();
+
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -237,7 +241,7 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Show when="signed-out">
+            {!isSignedIn && (
               <div className="flex items-center gap-3">
                 <SignInButton mode="redirect">
                   <button className="hidden rounded-full border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-flex">
@@ -253,9 +257,9 @@ export default function HomePage() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-            </Show>
+            )}
 
-            <Show when="signed-in">
+            {isSignedIn && (
               <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard"
@@ -278,7 +282,7 @@ export default function HomePage() {
                   }}
                 />
               </div>
-            </Show>
+            )}
           </div>
         </div>
       </header>
@@ -301,7 +305,7 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Show when="signed-out">
+              {!isSignedIn && (
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-medium text-black transition hover:scale-[1.02]"
@@ -309,9 +313,9 @@ export default function HomePage() {
                   Créer mon compte
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </Show>
+              )}
 
-              <Show when="signed-in">
+              {isSignedIn && (
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-medium text-black transition hover:scale-[1.02]"
@@ -319,7 +323,7 @@ export default function HomePage() {
                   Ouvrir le dashboard
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </Show>
+              )}
 
               <Link
                 href="/examples"
@@ -711,7 +715,7 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-              <Show when="signed-out">
+              {!isSignedIn && (
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-3.5 text-sm font-medium text-white"
@@ -719,9 +723,9 @@ export default function HomePage() {
                   Créer un compte
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </Show>
+              )}
 
-              <Show when="signed-in">
+              {isSignedIn && (
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-3.5 text-sm font-medium text-white"
@@ -729,7 +733,7 @@ export default function HomePage() {
                   Ouvrir le dashboard
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </Show>
+              )}
 
               <Link
                 href="/billing"
