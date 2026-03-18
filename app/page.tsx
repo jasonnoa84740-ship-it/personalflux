@@ -6,7 +6,6 @@ import {
   Check,
   ChevronRight,
   Crown,
-  Lock,
   MessageSquare,
   Play,
   Shield,
@@ -17,12 +16,13 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 
 const stats = [
   { label: "Clones IA créés", value: "12k+" },
   { label: "Conversations générées", value: "1.8M+" },
   { label: "Rétention moyenne", value: "82%" },
-  { label: "Revenus créateurs", value: "$94k+" },
+  { label: "Revenus créateurs", value: "94k€+" },
 ];
 
 const logos = [
@@ -37,39 +37,39 @@ const logos = [
 const features = [
   {
     icon: UserCircle2,
-    title: "Une identité visuelle qui paraît réelle",
+    title: "Identité visuelle crédible",
     description:
-      "Crée une version digitale premium de toi avec une photo, un nom, un ton, un positionnement et une identité publique que les gens comprennent immédiatement.",
+      "Crée une version digitale premium de toi-même avec une image, un nom, un ton et un positionnement immédiatement compréhensible.",
   },
   {
     icon: Brain,
-    title: "Personnalité profondément personnalisable",
+    title: "Personnalité ultra personnalisable",
     description:
-      "Contrôle la façon dont ton clone parle, réagit, explique, vend, rassure, plaisante, enseigne ou guide selon ton style et tes règles de communication.",
+      "Contrôle la manière dont ton clone parle, rassure, vend, explique, enseigne ou guide avec ton propre style.",
   },
   {
     icon: MessageSquare,
-    title: "Une expérience de chat pensée pour la rétention",
+    title: "Expérience de chat premium",
     description:
-      "Offre des conversations plus propres, plus personnelles et plus premium qu’un bot classique grâce à une belle UI, des prompts structurés et des parcours pensés pour convertir.",
+      "Des conversations plus propres, plus immersives et plus convaincantes qu’un chatbot générique.",
   },
   {
     icon: Crown,
-    title: "Un produit prêt pour l’abonnement",
+    title: "Produit monétisable",
     description:
-      "Bloque l’accès derrière des offres premium, des espaces réservés aux membres ou des expériences privées conçues pour transformer ton clone en vrai produit monétisable.",
+      "Transforme ton clone en véritable produit premium avec accès réservé, abonnements et pages membres.",
   },
   {
     icon: Shield,
-    title: "Accès privé et contrôle total",
+    title: "Accès privé et contrôle",
     description:
-      "Choisis qui peut accéder à ton clone, ce qui est public, quels comportements sont autorisés et comment ton audience interagit avec ton identité.",
+      "Choisis qui peut accéder au clone, quel contenu est visible et comment ton audience interagit avec lui.",
   },
   {
     icon: TrendingUp,
-    title: "Pensé pour le business, pas juste pour une démo",
+    title: "Pensé pour le business",
     description:
-      "Des landing pages jusqu’aux sections pricing prêtes pour le paiement, toute l’expérience est conçue pour être crédible aux yeux de vrais utilisateurs et de vrais abonnés.",
+      "Landing page, pricing, abonnement, dashboard : l’expérience est conçue pour un vrai produit live.",
   },
 ];
 
@@ -77,25 +77,25 @@ const steps = [
   {
     number: "01",
     title: "Crée ton identité",
-    text: "Ajoute un visage, définis un nom, choisis un ton et pose les fondations de la personnalité de ton clone.",
+    text: "Ajoute une image, un nom, un ton et les bases de personnalité de ton clone.",
   },
   {
     number: "02",
-    title: "Définis son comportement",
-    text: "Choisis comment ton clone parle, gère les questions, réagit émotionnellement et représente ta marque ou ton persona.",
+    title: "Structure son comportement",
+    text: "Définis sa façon de répondre, son attitude, son rôle et la manière dont il représente ta marque.",
   },
   {
     number: "03",
     title: "Lance et monétise",
-    text: "Publie ton clone, partage un lien d’accès privé, ajoute des abonnements et transforme ton IA en un véritable produit.",
+    text: "Publie ton clone, partage-le, ajoute des abonnements et transforme-le en produit.",
   },
 ];
 
 const useCases = [
-  "Expériences premium pour créateurs",
-  "Compagnons IA privés",
-  "Clones de coachs ou mentors",
-  "Avatars de vente et génération de leads",
+  "Expériences fan pour créateurs",
+  "Produits compagnon IA privés",
+  "Clones coach ou mentor",
+  "Avatars vente et lead gen",
   "Pages premium de marque personnelle",
   "Assistants digitaux réservés aux membres",
 ];
@@ -103,26 +103,26 @@ const useCases = [
 const pricing = [
   {
     name: "Starter",
-    price: "$19",
-    description: "Pour tester le produit et lancer un clone propre et soigné.",
-    cta: "Voir Starter",
-    featured: false,
+    price: "19€",
+    description: "Pour lancer un premier clone propre et crédible.",
+    cta: "Commencer avec Starter",
     href: "/billing",
+    featured: false,
     features: [
       "1 clone IA",
       "Éditeur de personnalité basique",
       "Page de chat privée",
       "Jusqu’à 1 000 messages / mois",
-      "Analytiques de base",
+      "Analytics de base",
     ],
   },
   {
     name: "Pro",
-    price: "$49",
-    description: "Pour les créateurs et fondateurs prêts à monétiser un clone premium.",
+    price: "49€",
+    description: "Pour les créateurs et fondateurs prêts à monétiser.",
     cta: "Passer sur Pro",
-    featured: true,
     href: "/billing",
+    featured: true,
     features: [
       "3 clones IA",
       "Contrôles avancés de personnalité",
@@ -134,11 +134,11 @@ const pricing = [
   },
   {
     name: "Scale",
-    price: "$149",
-    description: "Pour les équipes, agences et marques qui lancent plusieurs expériences.",
-    cta: "Voir Scale",
-    featured: false,
+    price: "149€",
+    description: "Pour agences, équipes et marques.",
+    cta: "Parler aux ventes",
     href: "/billing",
+    featured: false,
     features: [
       "Clones illimités",
       "Accès équipe",
@@ -154,22 +154,22 @@ const faqs = [
   {
     question: "Qu’est-ce qu’un clone IA visuel ?",
     answer:
-      "Un clone IA visuel est une version digitale et brandée d’une personne, avec un visage, un nom, une personnalité et une expérience de conversation en direct avec laquelle les utilisateurs peuvent interagir en ligne.",
+      "C’est une identité digitale avec une image, un nom, une personnalité et une expérience conversationnelle en ligne.",
   },
   {
     question: "Puis-je rendre l’accès privé ou payant ?",
     answer:
-      "Oui. Le produit est pensé pour prendre en charge des accès réservés aux membres, des expériences premium et des modèles de monétisation par abonnement.",
+      "Oui. La plateforme est pensée pour les accès réservés, les expériences premium et les abonnements.",
   },
   {
-    question: "Puis-je personnaliser la manière dont le clone parle ?",
+    question: "Puis-je personnaliser sa façon de parler ?",
     answer:
-      "Oui. Tu peux définir le ton, le style, l’attitude, l’expertise, les limites, la structure des réponses et l’énergie générale de ton clone.",
+      "Oui. Tu peux définir le ton, le style, l’attitude, l’expertise, les limites et la structure de réponse.",
   },
   {
-    question: "Est-ce seulement pour les créateurs ?",
+    question: "C’est réservé aux créateurs ?",
     answer:
-      "Non. Cela convient aussi aux coachs, consultants, agences, fondateurs, communautés et marques personnelles premium qui veulent créer un produit d’identité digitale.",
+      "Non. Ça marche aussi pour les coachs, consultants, agences, fondateurs, communautés et marques premium.",
   },
 ];
 
@@ -215,7 +215,9 @@ export default function HomePage() {
             </div>
             <div>
               <div className="text-sm font-semibold tracking-wide">PersonaFlux</div>
-              <div className="text-xs text-white/45">Plateforme de clone IA visuel</div>
+              <div className="text-xs text-white/45">
+                Plateforme de clones IA visuels
+              </div>
             </div>
           </Link>
 
@@ -235,19 +237,48 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="hidden rounded-full border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-flex"
-            >
-              Connexion
-            </Link>
-            <Link
-              href="/create"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:scale-[1.02]"
-            >
-              Commencer
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <Show when="signed-out">
+              <div className="flex items-center gap-3">
+                <SignInButton mode="redirect">
+                  <button className="hidden rounded-full border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-flex">
+                    Connexion
+                  </button>
+                </SignInButton>
+
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:scale-[1.02]"
+                >
+                  Commencer
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </Show>
+
+            <Show when="signed-in">
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard"
+                  className="hidden rounded-full border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-flex"
+                >
+                  Dashboard
+                </Link>
+
+                <UserButton
+                  userProfileMode="navigation"
+                  userProfileUrl="/account"
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: "h-10 w-10",
+                      userButtonPopoverCard:
+                        "bg-[#111111] border border-white/10 text-white",
+                      userButtonPopoverActionButton:
+                        "text-white hover:bg-white/5",
+                    },
+                  }}
+                />
+              </div>
+            </Show>
           </div>
         </div>
       </header>
@@ -261,26 +292,40 @@ export default function HomePage() {
             </div>
 
             <h1 className="max-w-4xl text-5xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
-              Transforme ton visage, ta voix et ta personnalité en produit IA premium.
+              Transforme ton image, ta voix et ta personnalité en produit IA premium.
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/65 sm:text-xl">
-              Crée un clone IA visuel qui paraît personnel, qui a l’air premium et qui est prêt pour de vrais utilisateurs, de vraies conversations et de vrais abonnements.
+              Construis un clone IA visuel, crédible et monétisable, prêt pour de vrais
+              utilisateurs, de vraies conversations et de vrais abonnements.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/create"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-medium text-black transition hover:scale-[1.02]"
-              >
-                Créer ton clone
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <Show when="signed-out">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-medium text-black transition hover:scale-[1.02]"
+                >
+                  Créer mon compte
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Show>
+
+              <Show when="signed-in">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-medium text-black transition hover:scale-[1.02]"
+                >
+                  Ouvrir le dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Show>
+
               <Link
                 href="/examples"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-medium text-white transition hover:bg-white/10"
               >
-                Voir la démo
+                Voir les exemples
                 <Play className="h-4 w-4" />
               </Link>
             </div>
@@ -312,11 +357,12 @@ export default function HomePage() {
                       <div className="mt-1 text-sm text-white/50">Clone visuel premium</div>
                     </div>
                     <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
-                      en ligne
+                      live
                     </div>
                   </div>
                   <p className="mt-4 text-sm leading-7 text-white/60">
-                    Stratégique, chaleureux, direct, persuasif et très créatif. Conçu pour des conversations premium et un accès réservé aux membres.
+                    Stratégique, chaleureux, direct et créatif. Pensé pour les
+                    conversations premium et l’accès réservé.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     {["Image", "Voix", "Personnalité", "Accès payant"].map((tag) => (
@@ -337,40 +383,45 @@ export default function HomePage() {
                         <Bot className="h-5 w-5" />
                       </div>
                       <div>
-                        <div className="font-medium">Clone Alex</div>
+                        <div className="font-medium">Alex Clone</div>
                         <div className="text-sm text-white/45">Répond instantanément</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
                       <div className="h-2 w-2 rounded-full bg-emerald-300" />
-                      En ligne
+                      Online
                     </div>
                   </div>
 
                   <div className="space-y-4 py-5">
                     <div className="max-w-[85%] rounded-3xl rounded-tl-md bg-white/10 px-4 py-3 text-sm leading-7 text-white/90">
-                      Salut, moi c’est Alex. Je peux expliquer l’offre, présenter la marque et guider les visiteurs vers un abonnement premium.
+                      Salut, je suis Alex. Je peux expliquer l’offre, présenter la
+                      marque et guider les visiteurs vers un abonnement premium.
                     </div>
                     <div className="ml-auto max-w-[80%] rounded-3xl rounded-br-md border border-white/10 bg-white px-4 py-3 text-sm leading-7 text-black">
-                      Qu’est-ce qui rend ça différent d’un chatbot normal ?
+                      Qu’est-ce qui rend ça différent d’un chatbot classique ?
                     </div>
                     <div className="max-w-[88%] rounded-3xl rounded-tl-md bg-white/10 px-4 py-3 text-sm leading-7 text-white/90">
-                      Cela ressemble davantage à un produit d’identité digitale qu’à un simple bot utilitaire. Tu définis le visage, le ton, le positionnement, le niveau d’accès et le modèle de monétisation.
+                      C’est plus un produit d’identité digitale qu’un simple outil. Tu
+                      définis le visage, le ton, le positionnement, l’accès et la
+                      monétisation.
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                     <div className="mb-3 flex flex-wrap gap-2">
-                      {["Onboarding créateur", "Accès premium", "Capture de leads"].map(
-                        (chip) => (
-                          <span
-                            key={chip}
-                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60"
-                          >
-                            {chip}
-                          </span>
-                        )
-                      )}
+                      {[
+                        "Onboarding créateur",
+                        "Accès premium",
+                        "Capture de leads",
+                      ].map((chip) => (
+                        <span
+                          key={chip}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60"
+                        >
+                          {chip}
+                        </span>
+                      ))}
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex-1 rounded-full border border-white/10 bg-black px-4 py-3 text-sm text-white/40">
@@ -399,9 +450,9 @@ export default function HomePage() {
       <section id="product" className="px-6 py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionTitle
-            badge="Fonctionnement"
-            title="Du profil initial à l’expérience IA payante"
-            description="Un workflow simple pour construire un clone soigné que les gens peuvent réellement utiliser, apprécier et rejoindre via abonnement."
+            badge="Comment ça marche"
+            title="Du profil au produit IA payant"
+            description="Un workflow simple pour créer un clone propre, crédible et réellement utilisable."
           />
 
           <div className="mt-16 grid gap-6 lg:grid-cols-3">
@@ -429,8 +480,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl">
           <SectionTitle
             badge="Fonctionnalités"
-            title="Tout ce qu’il faut pour une sensation premium"
-            description="Pas juste une interface de chatbot. Une vraie direction produit pour l’identité, la rétention, le contrôle d’accès et la monétisation."
+            title="Tout ce qu’il faut pour une expérience premium"
+            description="Pas juste une UI de chatbot. Une vraie direction produit pour l’identité, l’accès et la monétisation."
           />
 
           <div className="mt-16 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -445,7 +496,9 @@ export default function HomePage() {
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="mt-6 text-xl font-semibold text-white">{feature.title}</h3>
-                  <p className="mt-3 text-base leading-7 text-white/60">{feature.description}</p>
+                  <p className="mt-3 text-base leading-7 text-white/60">
+                    {feature.description}
+                  </p>
                 </div>
               );
             })}
@@ -458,13 +511,14 @@ export default function HomePage() {
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 sm:p-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/60">
               <Star className="h-4 w-4" />
-              Conçu pour des usages à forte valeur
+              Cas d’usage premium
             </div>
             <h3 className="mt-6 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Plus qu’un clone. Cela peut devenir une vraie gamme de produits.
+              Plus qu’un clone. Un vrai produit.
             </h3>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
-              Positionne ton IA comme un coach, un ambassadeur de marque, un compagnon premium, une expérience créateur privée ou une couche de parcours client monétisée.
+              Positionne ton IA comme un coach, une identité de marque, une expérience
+              membre ou une couche de conversion premium.
             </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -485,11 +539,11 @@ export default function HomePage() {
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 sm:p-10">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-white/45">Aperçu du dashboard de revenus</div>
-                <div className="mt-1 text-2xl font-semibold">Couche de monétisation</div>
+                <div className="text-sm text-white/45">Aperçu revenus</div>
+                <div className="mt-1 text-2xl font-semibold">Couche monétisation</div>
               </div>
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60">
-                Aperçu
+                Preview
               </div>
             </div>
 
@@ -502,10 +556,12 @@ export default function HomePage() {
                     </div>
                     <div>
                       <div className="font-medium">Revenu mensuel récurrent</div>
-                      <div className="text-sm text-white/45">Abonnements et accès privés</div>
+                      <div className="text-sm text-white/45">
+                        Abonnements et accès privés
+                      </div>
                     </div>
                   </div>
-                  <div className="text-2xl font-semibold">$12,480</div>
+                  <div className="text-2xl font-semibold">12 480€</div>
                 </div>
               </div>
 
@@ -516,23 +572,7 @@ export default function HomePage() {
                 </div>
                 <div className="rounded-3xl border border-white/10 bg-black/50 p-5">
                   <div className="text-sm text-white/45">Membres payants</div>
-                  <div className="mt-2 text-3xl font-semibold">1,294</div>
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-black/50 p-5">
-                <div className="mb-4 flex items-center justify-between text-sm text-white/45">
-                  <span>Croissance de l’engagement</span>
-                  <span>30 derniers jours</span>
-                </div>
-                <div className="flex h-36 items-end gap-3">
-                  {[28, 45, 34, 60, 56, 74, 88, 70].map((height, index) => (
-                    <div
-                      key={index}
-                      className="flex-1 rounded-t-2xl bg-white/80"
-                      style={{ height: `${height}%` }}
-                    />
-                  ))}
+                  <div className="mt-2 text-3xl font-semibold">1 294</div>
                 </div>
               </div>
             </div>
@@ -545,7 +585,7 @@ export default function HomePage() {
           <SectionTitle
             badge="Tarifs"
             title="Des offres pensées pour lancer, grandir et monétiser"
-            description="Commence simplement, peaufine l’expérience, puis transforme-la en produit par abonnement avec plus d’accès, plus de clones et plus de contrôle."
+            description="Commence simplement, affine l’expérience, puis transforme-la en produit par abonnement."
           />
 
           <div className="mt-16 grid gap-6 xl:grid-cols-3">
@@ -628,49 +668,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="px-6 py-24 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-8 sm:p-10 lg:p-14">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/60">
-                <Lock className="h-4 w-4" />
-                Accès, contrôle et confiance
-              </div>
-              <h3 className="mt-6 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Donne-lui une apparence assez crédible pour que les gens paient.
-              </h3>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
-                Un produit IA payant a besoin de plus qu’un chat. Il a besoin d’un positionnement clair, de confiance, d’un design premium, d’un accès contrôlé et d’un parcours utilisateur qui semble vraiment terminé.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                "Landing pages premium",
-                "Expériences réservées aux membres",
-                "Onboarding propre",
-                "Profil visuel du clone",
-                "Structure prête pour le pricing",
-                "UI pensée pour convertir",
-              ].map((point) => (
-                <div
-                  key={point}
-                  className="rounded-3xl border border-white/10 bg-black/40 px-5 py-5 text-sm text-white/75"
-                >
-                  {point}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section id="faq" className="px-6 py-24 lg:px-8">
         <div className="mx-auto max-w-5xl">
           <SectionTitle
             badge="FAQ"
-            title="Les questions que les gens se posent avant de s’abonner"
-            description="Utilise cette section pour enlever les frictions, clarifier la promesse et répondre aux vrais doutes des futurs clients payants."
+            title="Les questions avant de passer premium"
+            description="Réduis les frictions et réponds aux objections de tes futurs utilisateurs payants."
           />
 
           <div className="mt-16 space-y-4">
@@ -682,7 +685,9 @@ export default function HomePage() {
                 <h3 className="text-lg font-medium text-white sm:text-xl">
                   {faq.question}
                 </h3>
-                <p className="mt-3 text-base leading-7 text-white/60">{faq.answer}</p>
+                <p className="mt-3 text-base leading-7 text-white/60">
+                  {faq.answer}
+                </p>
               </div>
             ))}
           </div>
@@ -697,23 +702,37 @@ export default function HomePage() {
                 Prêt à lancer
               </div>
               <h3 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
-                Crée ton clone IA maintenant. Transforme-le ensuite en vrai produit.
+                Lance ton clone maintenant. Transforme-le en produit ensuite.
               </h3>
               <p className="mt-4 max-w-2xl text-base leading-8 text-black/65 sm:text-lg">
-                Commence par l’identité, façonne l’expérience, puis transforme l’ensemble en plateforme premium prête pour l’abonnement.
+                Commence par l’identité, structure l’expérience, puis passe à une vraie
+                plateforme premium.
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <Show when="signed-out">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-3.5 text-sm font-medium text-white"
+                >
+                  Créer un compte
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Show>
+
+              <Show when="signed-in">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-3.5 text-sm font-medium text-white"
+                >
+                  Ouvrir le dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Show>
+
               <Link
-                href="/create"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-3.5 text-sm font-medium text-white"
-              >
-                Commencer
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/pricing"
+                href="/billing"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-6 py-3.5 text-sm font-medium text-black"
               >
                 Voir les tarifs
@@ -728,12 +747,12 @@ export default function HomePage() {
           <div>
             <div className="text-base font-semibold">PersonaFlux</div>
             <div className="mt-1 text-sm text-white/45">
-              Des clones IA visuels premium pour des produits digitaux modernes.
+              Clones IA visuels premium pour produits digitaux modernes.
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-5 text-sm text-white/55">
-            <Link href="/pricing" className="transition hover:text-white">
+            <Link href="/billing" className="transition hover:text-white">
               Tarifs
             </Link>
             <Link href="/examples" className="transition hover:text-white">

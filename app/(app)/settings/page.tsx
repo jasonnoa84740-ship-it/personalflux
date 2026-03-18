@@ -14,7 +14,7 @@ const settingCards = [
     icon: User,
     title: "Profil",
     text: "Nom, image, informations du compte",
-    href: "/settings/profile",
+    href: "/account",
   },
   {
     icon: Wallet,
@@ -26,7 +26,7 @@ const settingCards = [
     icon: Shield,
     title: "Sécurité",
     text: "Connexion, protection et accès au compte",
-    href: "/settings/security",
+    href: "/account/security",
   },
   {
     icon: SlidersHorizontal,
@@ -61,8 +61,7 @@ export default function SettingsPage() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
-            Cette page te permet d’accéder à ton profil, ton abonnement, ta sécurité
-            et les préférences de ton compte.
+            Accède à ton profil, ta sécurité, ton abonnement et tes préférences.
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
