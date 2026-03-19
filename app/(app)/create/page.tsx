@@ -89,6 +89,26 @@ export default function CreatePage() {
     setImagePreview(objectUrl);
   }
 
+  async function uploadAvatarIfNeeded() {
+    if (!imageFile) return null;
+
+    const formData = new FormData();
+    formData.append("file", imageFile);
+
+    const res = await fetch("/api/uploads/clone-avatar", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Impossible d’uploader l’image.");
+    }
+
+    return data.url as string;
+  }
+
   async function saveClone(status: "DRAFT" | "PUBLISHED") {
     setError("");
 
@@ -105,6 +125,8 @@ export default function CreatePage() {
     try {
       setLoadingAction(status === "DRAFT" ? "draft" : "publish");
 
+      const avatarUrl = await uploadAvatarIfNeeded();
+
       const res = await fetch("/api/clones", {
         method: "POST",
         headers: {
@@ -115,7 +137,7 @@ export default function CreatePage() {
           category,
           shortDescription: shortDescription.trim() || null,
           description: description.trim() || null,
-          avatarUrl: null, // pas de vrai stockage image pour l’instant
+          avatarUrl: avatarUrl || null,
           responseStyle,
           primaryGoal,
           tone: selectedTraits.join(", ") || null,
@@ -313,11 +335,6 @@ export default function CreatePage() {
                         Fichier sélectionné : {imageFile.name}
                       </div>
                     )}
-
-                    <div className="mt-3 text-xs text-white/40">
-                      L’image est previewée localement pour l’instant. Le vrai stockage
-                      viendra juste après.
-                    </div>
                   </div>
 
                   <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-black/40 p-5">
