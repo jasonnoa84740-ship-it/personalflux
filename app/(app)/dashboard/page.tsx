@@ -252,7 +252,7 @@ export default async function DashboardPage() {
                   Aucun clone pour le moment. Crée ton premier clone pour commencer.
                 </div>
               ) : (
-                clones.map((clone: any) => (
+                clones.map((clone: { id: string }) => (
                   <div
                     key={clone.id}
                     className="rounded-[1.5rem] border border-white/10 bg-black/40 p-5"
