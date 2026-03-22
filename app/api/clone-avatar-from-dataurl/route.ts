@@ -13,10 +13,13 @@ type ParsedDataUrl = {
 };
 
 function parseDataUrl(dataUrl: string): ParsedDataUrl | null {
-  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/s);
+  const match = dataUrl.match(/^data:([^;]+);base64,([\s\S]+)$/);
+
   if (!match) return null;
 
-  const [, mimeType, base64] = match;
+  const mimeType = match[1];
+  const base64 = match[2];
+
   if (!mimeType || !base64) return null;
 
   return { mimeType, base64 };
