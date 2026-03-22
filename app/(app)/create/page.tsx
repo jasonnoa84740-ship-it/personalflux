@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Check,
   ChevronRight,
-  Image as ImageIcon,
   Lock,
   Mic,
   Shield,
@@ -28,6 +27,54 @@ const traitsList = [
   "Expert",
   "Premium",
 ];
+
+type ApiBody = {
+  error?: string;
+  message?: string;
+  image?: string;
+  dataUrl?: string;
+  url?: string;
+  images?: Array<string | { url?: string; dataUrl?: string; image?: string }>;
+  [key: string]: unknown;
+};
+
+async function readResponseOnce(res: Response): Promise<ApiBody> {
+  const raw = await res.text();
+
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(raw) as ApiBody;
+  } catch {
+    return { message: raw };
+  }
+}
+
+function getApiError(data: ApiBody, fallback: string) {
+  if (typeof data?.error === "string" && data.error.trim()) return data.error;
+  if (typeof data?.message === "string" && data.message.trim()) return data.message;
+  return fallback;
+}
+
+function getGeneratedImageFromResponse(data: ApiBody): string | null {
+  if (typeof data?.image === "string" && data.image.trim()) return data.image;
+  if (typeof data?.dataUrl === "string" && data.dataUrl.trim()) return data.dataUrl;
+  if (typeof data?.url === "string" && data.url.trim()) return data.url;
+
+  if (Array.isArray(data?.images) && data.images.length > 0) {
+    const first = data.images[0];
+
+    if (typeof first === "string" && first.trim()) return first;
+
+    if (first && typeof first === "object") {
+      if (typeof first.image === "string" && first.image.trim()) return first.image;
+      if (typeof first.dataUrl === "string" && first.dataUrl.trim()) return first.dataUrl;
+      if (typeof first.url === "string" && first.url.trim()) return first.url;
+    }
+  }
+
+  return null;
+}
 
 export default function CreatePage() {
   const router = useRouter();
@@ -111,20 +158,23 @@ export default function CreatePage() {
         }),
       });
 
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("Réponse invalide pendant la génération de l’avatar.");
-      }
+      const data = await readResponseOnce(res);
 
       if (!res.ok) {
-        throw new Error(data?.error || "Erreur pendant la génération de l’avatar.");
+        throw new Error(
+          getApiError(data, "Erreur pendant la génération de l’avatar.")
+        );
       }
 
-      setGeneratedAvatarUrl(data.image);
+      const generatedImage = getGeneratedImageFromResponse(data);
+
+      if (!generatedImage) {
+        throw new Error("Aucune image valide n’a été renvoyée par la génération.");
+      }
+
+      setGeneratedAvatarUrl(generatedImage);
       setImageFile(null);
-      setImagePreview(data.image);
+      setImagePreview(generatedImage);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Impossible de générer l’avatar."
@@ -143,22 +193,23 @@ export default function CreatePage() {
         },
         body: JSON.stringify({
           dataUrl: generatedAvatarUrl,
+          cloneName: name.trim() || "clone-avatar",
         }),
       });
 
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        const text = await res.text();
-        throw new Error(text || "Impossible d’uploader l’avatar IA.");
-      }
+      const data = await readResponseOnce(res);
 
       if (!res.ok) {
-        throw new Error(data?.error || "Impossible d’uploader l’avatar IA.");
+        throw new Error(
+          getApiError(data, "Impossible d’uploader l’avatar IA.")
+        );
       }
 
-      return data.url as string;
+      if (typeof data.url !== "string" || !data.url.trim()) {
+        throw new Error("L’upload de l’avatar IA n’a pas renvoyé d’URL valide.");
+      }
+
+      return data.url;
     }
 
     if (generatedAvatarUrl && !generatedAvatarUrl.startsWith("data:image/")) {
@@ -175,19 +226,17 @@ export default function CreatePage() {
       body: formData,
     });
 
-    let data: any = null;
-    try {
-      data = await res.json();
-    } catch {
-      const text = await res.text();
-      throw new Error(text || "Impossible d’uploader l’image.");
-    }
+    const data = await readResponseOnce(res);
 
     if (!res.ok) {
-      throw new Error(data?.error || "Impossible d’uploader l’image.");
+      throw new Error(getApiError(data, "Impossible d’uploader l’image."));
     }
 
-    return data.url as string;
+    if (typeof data.url !== "string" || !data.url.trim()) {
+      throw new Error("L’upload de l’image n’a pas renvoyé d’URL valide.");
+    }
+
+    return data.url;
   }
 
   async function saveClone(status: "DRAFT" | "PUBLISHED") {
@@ -233,16 +282,10 @@ export default function CreatePage() {
         }),
       });
 
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        const text = await res.text();
-        throw new Error(text || "Impossible d’enregistrer le clone.");
-      }
+      const data = await readResponseOnce(res);
 
       if (!res.ok) {
-        throw new Error(data?.error || "Impossible d’enregistrer le clone.");
+        throw new Error(getApiError(data, "Impossible d’enregistrer le clone."));
       }
 
       router.push("/dashboard");
