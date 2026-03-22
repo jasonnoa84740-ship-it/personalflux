@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+type RouteContext = {
+  params: Promise<{ cloneId: string }>;
+};
 
 function normalizeAvatar(clone: {
   avatarUrl?: string | null;
@@ -18,10 +22,7 @@ function normalizeAvatar(clone: {
   );
 }
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ cloneId: string }> }
-) {
+export async function GET(_req: Request, context: RouteContext) {
   try {
     const { cloneId } = await context.params;
 
@@ -37,7 +38,7 @@ export async function GET(
       );
     }
 
-    const clone = await prisma.clone.findUnique({
+    const clone = await db.clone.findUnique({
       where: { id: cloneId },
       include: {
         visualAppearance: true,
@@ -57,13 +58,11 @@ export async function GET(
       );
     }
 
-    const avatarUrl = normalizeAvatar(clone);
-
     return NextResponse.json(
       {
         clone: {
           ...clone,
-          avatarUrl,
+          avatarUrl: normalizeAvatar(clone),
         },
       },
       {
@@ -90,18 +89,12 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: Request,
-  context: { params: Promise<{ cloneId: string }> }
-) {
+export async function PATCH(req: Request, context: RouteContext) {
   try {
     const { userId: clerkUserId } = await auth();
 
     if (!clerkUserId) {
-      return NextResponse.json(
-        { error: "Non autorisé." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
     }
 
     const { cloneId } = await context.params;
@@ -130,7 +123,7 @@ export async function PATCH(
       appearance,
     } = body ?? {};
 
-    const existingClone = await prisma.clone.findUnique({
+    const existingClone = await db.clone.findUnique({
       where: { id: cloneId },
       include: {
         user: {
@@ -174,7 +167,7 @@ export async function PATCH(
         ? avatarUrl.trim()
         : existingClone.avatarUrl || null;
 
-    await prisma.clone.update({
+    await db.clone.update({
       where: { id: cloneId },
       data: {
         name:
@@ -220,31 +213,6 @@ export async function PATCH(
                   : typeof tone === "string" && tone.trim()
                   ? tone.trim()
                   : null,
-              approxAgeRange:
-                typeof appearance?.approxAgeRange === "string" &&
-                appearance.approxAgeRange.trim()
-                  ? appearance.approxAgeRange.trim()
-                  : null,
-              genderPresentation:
-                typeof appearance?.genderPresentation === "string" &&
-                appearance.genderPresentation.trim()
-                  ? appearance.genderPresentation.trim()
-                  : null,
-              hairColor:
-                typeof appearance?.hairColor === "string" &&
-                appearance.hairColor.trim()
-                  ? appearance.hairColor.trim()
-                  : null,
-              eyeColor:
-                typeof appearance?.eyeColor === "string" &&
-                appearance.eyeColor.trim()
-                  ? appearance.eyeColor.trim()
-                  : null,
-              skinTone:
-                typeof appearance?.skinTone === "string" &&
-                appearance.skinTone.trim()
-                  ? appearance.skinTone.trim()
-                  : null,
               fashionStyle:
                 typeof appearance?.fashionStyle === "string" &&
                 appearance.fashionStyle.trim()
@@ -265,31 +233,6 @@ export async function PATCH(
                   : typeof tone === "string" && tone.trim()
                   ? tone.trim()
                   : null,
-              approxAgeRange:
-                typeof appearance?.approxAgeRange === "string" &&
-                appearance.approxAgeRange.trim()
-                  ? appearance.approxAgeRange.trim()
-                  : null,
-              genderPresentation:
-                typeof appearance?.genderPresentation === "string" &&
-                appearance.genderPresentation.trim()
-                  ? appearance.genderPresentation.trim()
-                  : null,
-              hairColor:
-                typeof appearance?.hairColor === "string" &&
-                appearance.hairColor.trim()
-                  ? appearance.hairColor.trim()
-                  : null,
-              eyeColor:
-                typeof appearance?.eyeColor === "string" &&
-                appearance.eyeColor.trim()
-                  ? appearance.eyeColor.trim()
-                  : null,
-              skinTone:
-                typeof appearance?.skinTone === "string" &&
-                appearance.skinTone.trim()
-                  ? appearance.skinTone.trim()
-                  : null,
               fashionStyle:
                 typeof appearance?.fashionStyle === "string" &&
                 appearance.fashionStyle.trim()
@@ -308,7 +251,7 @@ export async function PATCH(
       },
     });
 
-    const refreshedClone = await prisma.clone.findUnique({
+    const refreshedClone = await db.clone.findUnique({
       where: { id: cloneId },
       include: {
         visualAppearance: true,
@@ -329,7 +272,7 @@ export async function PATCH(
 
     if (normalizedAvatarUrl) {
       if (existingAvatarAsset) {
-        await prisma.cloneMediaAsset.update({
+        await db.cloneMediaAsset.update({
           where: { id: existingAvatarAsset.id },
           data: {
             url: normalizedAvatarUrl,
@@ -337,7 +280,7 @@ export async function PATCH(
           },
         });
       } else {
-        await prisma.cloneMediaAsset.create({
+        await db.cloneMediaAsset.create({
           data: {
             cloneId: refreshedClone.id,
             type: "AVATAR",
@@ -349,7 +292,7 @@ export async function PATCH(
       }
     }
 
-    const finalClone = await prisma.clone.findUnique({
+    const finalClone = await db.clone.findUnique({
       where: { id: cloneId },
       include: {
         visualAppearance: true,
@@ -383,18 +326,12 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _req: Request,
-  context: { params: Promise<{ cloneId: string }> }
-) {
+export async function DELETE(_req: Request, context: RouteContext) {
   try {
     const { userId: clerkUserId } = await auth();
 
     if (!clerkUserId) {
-      return NextResponse.json(
-        { error: "Non autorisé." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
     }
 
     const { cloneId } = await context.params;
@@ -406,7 +343,7 @@ export async function DELETE(
       );
     }
 
-    const existingClone = await prisma.clone.findUnique({
+    const existingClone = await db.clone.findUnique({
       where: { id: cloneId },
       include: {
         user: {
@@ -431,7 +368,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.clone.delete({
+    await db.clone.delete({
       where: { id: cloneId },
     });
 
