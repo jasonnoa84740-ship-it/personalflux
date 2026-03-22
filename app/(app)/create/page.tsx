@@ -111,7 +111,12 @@ export default function CreatePage() {
         }),
       });
 
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Réponse invalide pendant la génération de l’avatar.");
+      }
 
       if (!res.ok) {
         throw new Error(data?.error || "Erreur pendant la génération de l’avatar.");
@@ -130,7 +135,33 @@ export default function CreatePage() {
   }
 
   async function uploadAvatarIfNeeded() {
-    if (generatedAvatarUrl) {
+    if (generatedAvatarUrl?.startsWith("data:image/")) {
+      const res = await fetch("/api/clone-avatar-from-dataurl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          dataUrl: generatedAvatarUrl,
+        }),
+      });
+
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text();
+        throw new Error(text || "Impossible d’uploader l’avatar IA.");
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Impossible d’uploader l’avatar IA.");
+      }
+
+      return data.url as string;
+    }
+
+    if (generatedAvatarUrl && !generatedAvatarUrl.startsWith("data:image/")) {
       return generatedAvatarUrl;
     }
 
@@ -144,7 +175,13 @@ export default function CreatePage() {
       body: formData,
     });
 
-    const data = await res.json();
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {
+      const text = await res.text();
+      throw new Error(text || "Impossible d’uploader l’image.");
+    }
 
     if (!res.ok) {
       throw new Error(data?.error || "Impossible d’uploader l’image.");
@@ -196,7 +233,13 @@ export default function CreatePage() {
         }),
       });
 
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text();
+        throw new Error(text || "Impossible d’enregistrer le clone.");
+      }
 
       if (!res.ok) {
         throw new Error(data?.error || "Impossible d’enregistrer le clone.");
