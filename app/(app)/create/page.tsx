@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { Suspense, useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -90,7 +90,7 @@ function getGeneratedImageFromResponse(data: ApiBody): string | null {
   return null;
 }
 
-export default function CreatePage() {
+function CreatePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userId } = useAuth();
@@ -413,7 +413,7 @@ export default function CreatePage() {
 
             <div>
               <div className="text-sm font-semibold tracking-wide">
-                {isEditMode ? "Modifier ton clone" : "Créer ton clone"}
+                {searchParams.get("cloneId") ? "Modifier ton clone" : "Créer ton clone"}
               </div>
               <div className="text-xs text-white/45">
                 Avatar, personnalité et positionnement
@@ -827,5 +827,23 @@ export default function CreatePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function CreatePageFallback() {
+  return (
+    <main className="min-h-screen bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center text-white/60">
+        Chargement...
+      </div>
+    </main>
+  );
+}
+
+export default function CreatePage() {
+  return (
+    <Suspense fallback={<CreatePageFallback />}>
+      <CreatePageContent />
+    </Suspense>
   );
 }
