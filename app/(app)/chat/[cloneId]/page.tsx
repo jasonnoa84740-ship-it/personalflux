@@ -407,22 +407,22 @@ export default function CloneChatPage() {
   const params = useParams();
 
   const cloneId = useMemo(() => {
-  const fromParams =
-    (params?.cloneId as string) ||
-    (params?.id as string) ||
-    (params?.slug as string);
+    const fromParams =
+      (params?.cloneId as string) ||
+      (params?.id as string) ||
+      (params?.slug as string);
 
-  if (fromParams && String(fromParams).trim()) {
-    return String(fromParams).trim();
-  }
+    if (fromParams && String(fromParams).trim()) {
+      return String(fromParams).trim();
+    }
 
-  if (typeof window !== "undefined") {
-    const parts = window.location.pathname.split("/").filter(Boolean);
-    return parts[parts.length - 1] || "";
-  }
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      return parts[parts.length - 1] || "";
+    }
 
-  return "";
-}, [params]);
+    return "";
+  }, [params]);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -458,7 +458,6 @@ export default function CloneChatPage() {
     traits: [],
     tags: [],
   });
-  const [debugClone, setDebugClone] = useState<any>(null);
 
   const suggestions = useMemo(
     () => [
@@ -519,7 +518,6 @@ export default function CloneChatPage() {
     async function loadClone() {
       try {
         if (!cloneId) {
-          console.error("Aucun cloneId trouvé dans l'URL", params);
           setLoadingClone(false);
           return;
         }
@@ -531,15 +529,11 @@ export default function CloneChatPage() {
         });
         const data = await readJsonSafe(res);
 
-        console.log("CLONE API DATA =", data);
-        console.log("CLONE OBJECT =", data.clone);
-
         if (!res.ok) {
           throw new Error(data?.error || "Impossible de charger le clone.");
         }
 
         const clone = data.clone || {};
-        setDebugClone(clone);
 
         const longDescription =
           typeof clone.description === "string" ? clone.description.trim() : "";
@@ -556,7 +550,7 @@ export default function CloneChatPage() {
           (typeof clone.imageUrl === "string" && clone.imageUrl.trim()) ||
           null;
 
-        const mappedCloneData: CloneData = {
+        setCloneData({
           id: typeof clone.id === "string" ? clone.id : "",
           name: typeof clone.name === "string" ? clone.name : "Clone",
           category:
@@ -585,13 +579,12 @@ export default function CloneChatPage() {
           traits: Array.isArray(clone.traits) ? clone.traits : [],
           tags: [
             (typeof clone.tone === "string" && clone.tone.trim()) || "Premium",
-            (typeof clone.visibility === "string" && clone.visibility.trim()) || "Privé",
-            (typeof clone.category === "string" && clone.category.trim()) || "Clone",
+            (typeof clone.visibility === "string" && clone.visibility.trim()) ||
+              "Privé",
+            (typeof clone.category === "string" && clone.category.trim()) ||
+              "Clone",
           ],
-        };
-
-        console.log("MAPPED CLONE DATA =", mappedCloneData);
-        setCloneData(mappedCloneData);
+        });
       } catch (error) {
         console.error("LOAD CLONE ERROR:", error);
       } finally {
@@ -600,7 +593,7 @@ export default function CloneChatPage() {
     }
 
     loadClone();
-  }, [cloneId, params]);
+  }, [cloneId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -806,10 +799,6 @@ export default function CloneChatPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="fixed left-4 top-4 z-[9999] rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white">
-        DEBUG CHAT PAGE V2
-      </div>
-
       <LimitModal
         open={!!limitModal}
         type={limitModal || "messages"}
@@ -857,24 +846,6 @@ export default function CloneChatPage() {
             <p className="mt-5 text-sm leading-7 text-white/60">
               {cloneData.description || "Chargement du clone..."}
             </p>
-
-            <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-yellow-300">
-                Debug cloneData
-              </div>
-              <pre className="whitespace-pre-wrap text-[10px] leading-5 text-yellow-100">
-                {JSON.stringify(cloneData, null, 2)}
-              </pre>
-            </div>
-
-            <div className="mt-4 rounded-3xl border border-blue-500/20 bg-blue-500/10 p-4">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
-                Debug API clone
-              </div>
-              <pre className="whitespace-pre-wrap text-[10px] leading-5 text-blue-100">
-                {JSON.stringify(debugClone, null, 2)}
-              </pre>
-            </div>
 
             <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
               <div className="text-sm font-medium text-white/90">Accès actuel</div>
