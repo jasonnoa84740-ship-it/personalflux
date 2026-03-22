@@ -38,7 +38,9 @@ export async function POST(req: Request) {
     const clone = await prisma.clone.findFirst({
       where: {
         id: parsed.data.cloneId,
-        userId,
+        user: {
+          clerkUserId: userId,
+        },
       },
       include: {
         characterBible: true,
@@ -73,7 +75,7 @@ export async function POST(req: Request) {
       wardrobeOverride: parsed.data.wardrobeOverride,
     });
 
-    const scene = await prisma.scene.create({
+    const scene = await prisma.cloneScene.create({
       data: {
         cloneId: clone.id,
         templateKey: template.key,
