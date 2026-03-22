@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useRef, useState, useEffect } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -332,7 +332,7 @@ function CreatePageContent() {
     setError("");
 
     if (!userId) {
-      setError("Tu dois être connecté pour créer un clone.");
+      setError("Tu dois être connecté.");
       return;
     }
 
@@ -344,7 +344,54 @@ function CreatePageContent() {
     try {
       setLoadingAction(status === "DRAFT" ? "draft" : "publish");
 
-      const avatarUrl = await uploadAvatarIfNeeded();
+      let finalAvatarUrl = generatedAvatarUrl;
+
+      if (generatedAvatarUrl?.startsWith("data:image/")) {
+        const res = await fetch("/api/clone-avatar-from-dataurl", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            dataUrl: generatedAvatarUrl,
+            cloneName: name.trim(),
+          }),
+        });
+
+        const data = await readResponseOnce(res);
+
+        if (!res.ok) {
+          throw new Error(getApiError(data, "Upload avatar échoué."));
+        }
+
+        if (typeof data.url !== "string" || !data.url.trim()) {
+          throw new Error("Aucune URL valide renvoyée pour l’avatar.");
+        }
+
+        finalAvatarUrl = data.url;
+      }
+
+      if (!finalAvatarUrl && imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        const res = await fetch("/api/clone-avatar", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await readResponseOnce(res);
+
+        if (!res.ok) {
+          throw new Error(getApiError(data, "Upload image échoué."));
+        }
+
+        if (typeof data.url !== "string" || !data.url.trim()) {
+          throw new Error("Aucune URL valide renvoyée pour l’image.");
+        }
+
+        finalAvatarUrl = data.url;
+      }
 
       const endpoint = cloneId ? `/api/clones/${cloneId}` : "/api/clones";
       const method = cloneId ? "PATCH" : "POST";
@@ -359,7 +406,7 @@ function CreatePageContent() {
           category,
           shortDescription: shortDescription.trim() || null,
           description: description.trim() || null,
-          avatarUrl: avatarUrl || null,
+          avatarUrl: finalAvatarUrl || null,
           responseStyle,
           primaryGoal,
           tone: selectedTraits.join(", ") || null,
@@ -369,7 +416,7 @@ function CreatePageContent() {
           appearance: {
             energy: selectedTraits.join(", ") || null,
             fashionStyle: responseStyle,
-            referenceImageUrl: avatarUrl || null,
+            referenceImageUrl: finalAvatarUrl || null,
           },
         }),
       });
@@ -383,6 +430,7 @@ function CreatePageContent() {
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
+      console.error("[SAVE_CLONE_ERROR]", err);
       setError(err instanceof Error ? err.message : "Une erreur est survenue.");
     } finally {
       setLoadingAction(null);
@@ -415,7 +463,7 @@ function CreatePageContent() {
 
             <div>
               <div className="text-sm font-semibold tracking-wide">
-                {searchParams.get("cloneId") ? "Modifier ton clone" : "Créer ton clone"}
+                {isEditMode ? "Modifier ton clone" : "Créer ton clone"}
               </div>
               <div className="text-xs text-white/45">
                 Avatar, personnalité et positionnement
