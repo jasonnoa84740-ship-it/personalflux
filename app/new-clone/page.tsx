@@ -58,7 +58,7 @@ export default function NewClonePage() {
         return;
       }
 
-      router.push(`/clone/${data.clone.id}`);
+      router.push(`/studio/clone/${data.clone.id}`);
     } catch (err) {
       console.error(err);
       setError("Impossible de créer le clone");
